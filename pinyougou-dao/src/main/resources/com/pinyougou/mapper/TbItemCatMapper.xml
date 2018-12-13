@@ -99,8 +99,7 @@
     </if>
   </delete>
   <insert id="insert" parameterType="com.pinyougou.pojo.TbItemCat" >
-    insert into tb_item_cat (id, parent_id, name, 
-      type_id)
+    insert into tb_item_cat (id, parent_id, name, type_id)
     values (#{id,jdbcType=BIGINT}, #{parentId,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, 
       #{typeId,jdbcType=BIGINT})
   </insert>
