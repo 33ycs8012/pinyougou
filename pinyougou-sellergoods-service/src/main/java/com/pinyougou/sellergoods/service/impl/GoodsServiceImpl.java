@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -17,10 +19,12 @@ import com.pinyougou.mapper.TbItemCatMapper;
 import com.pinyougou.mapper.TbItemMapper;
 import com.pinyougou.mapper.TbSellerMapper;
 import com.pinyougou.pojo.TbGoods;
+import com.pinyougou.pojo.TbGoodsDesc;
 import com.pinyougou.pojo.TbGoodsExample;
 import com.pinyougou.pojo.TbGoodsExample.Criteria;
 import com.pinyougou.pojo.TbItem;
 import com.pinyougou.pojo.TbItemCat;
+import com.pinyougou.pojo.TbItemExample;
 import com.pinyougou.pojo.TbSeller;
 import com.pinyougou.pojo.Goods;
 import com.pinyougou.pojo.TbBrand;
@@ -50,6 +54,24 @@ public class GoodsServiceImpl implements GoodsService {
 	
 	@Autowired
 	private TbSellerMapper sellerMapper;
+	
+	//商品状态
+	@Value("${item_Status}")
+	private String item_Status;
+	
+	//是否默认
+	@Value("${item_IsDefault}")
+	private String item_IsDefault;
+	
+	//默认库存数量
+	@Value("${item_Num}")
+	private Integer item_Num;
+	
+	//默认SKU
+	@Value("${item_Spec}")
+	private String item_Spec;
+	
+	
 	
 	/**
 	 * 查询全部
@@ -92,8 +114,26 @@ public class GoodsServiceImpl implements GoodsService {
 	 * @return
 	 */
 	@Override
-	public TbGoods findOne(Long id){
-		return goodsMapper.selectByPrimaryKey(id);
+	public Goods findOne(Long id){
+		
+		Goods goods = new Goods();
+		
+		TbGoods tbGoods = goodsMapper.selectByPrimaryKey(id);
+		
+		goods.setGoods(tbGoods);
+		
+		TbGoodsDesc tbGoodsDesc = goodsDescMapper.selectByPrimaryKey(id);
+		
+		goods.setGoodsDesc(tbGoodsDesc);
+		
+		//查询SKU商品列表
+		TbItemExample example=new TbItemExample();
+		com.pinyougou.pojo.TbItemExample.Criteria criteria = example.createCriteria();
+		criteria.andGoodsIdEqualTo(id);//查询条件：商品ID
+		List<TbItem> itemList = itemMapper.selectByExample(example);		
+		goods.setItemList(itemList);
+		
+		return goods;
 	}
 
 	/**
@@ -107,7 +147,7 @@ public class GoodsServiceImpl implements GoodsService {
 	}
 	
 	
-		@Override
+	@Override
 	public PageResult findPage(TbGoods goods, int pageNum, int pageSize) {
 		PageHelper.startPage(pageNum, pageSize);
 		
@@ -115,8 +155,9 @@ public class GoodsServiceImpl implements GoodsService {
 		Criteria criteria = example.createCriteria();
 		
 		if(goods!=null){			
-						if(goods.getSellerId()!=null && goods.getSellerId().length()>0){
-				criteria.andSellerIdLike("%"+goods.getSellerId()+"%");
+			if(goods.getSellerId()!=null && goods.getSellerId().length()>0){
+//				criteria.andSellerIdLike("%"+goods.getSellerId()+"%");
+				criteria.andSellerIdEqualTo(goods.getSellerId());
 			}
 			if(goods.getGoodsName()!=null && goods.getGoodsName().length()>0){
 				criteria.andGoodsNameLike("%"+goods.getGoodsName()+"%");
@@ -153,54 +194,69 @@ public class GoodsServiceImpl implements GoodsService {
 		 */
 		@Override
 		public void add(Goods goods) {
+			
 			goods.getGoods().setAuditStatus("0");//设置未申请状态
 			goodsMapper.insert(goods.getGoods());		
 			goods.getGoodsDesc().setGoodsId(goods.getGoods().getId());//设置ID
 			goodsDescMapper.insert(goods.getGoodsDesc());//插入商品扩展数据
 			
-			for (TbItem item : goods.getItemList()) {
-				
-				//标题title
-				String title = goods.getGoods().getGoodsName();
-				
-				Map<String, Object> specMap = JSON.parseObject(item.getSpec());
-				
-				for (String key : specMap.keySet()) {
-					title += " " + specMap.get(key);
+			if("1".equals(goods.getGoods().getIsEnableSpec())) {
+				for (TbItem item : goods.getItemList()) {
+					//标题title
+					String title = goods.getGoods().getGoodsName();
+					
+					Map<String, Object> specMap = JSON.parseObject(item.getSpec());
+					
+					for (String key : specMap.keySet()) {
+						title += " " + specMap.get(key);
+					}
+					
+					item.setTitle(title);
+					
+					setItemMethod(goods, item);
+					
+					itemMapper.insert(item);
 				}
+			} else {
+				TbItem item = new TbItem();
 				
-				item.setTitle(title);
+				item.setTitle(goods.getGoods().getGoodsName());
+				item.setPrice(goods.getGoods().getPrice());
+				item.setStatus("1");
+				item.setIsDefault("1");
+				item.setNum(99999);
+				item.setSpec("{}");
 				
-				item.setGoodsId(goods.getGoods().getId());//商品SPU编号
-				
-				item.setSellerId(goods.getGoods().getSellerId());//商家编号
-				
-				item.setCategoryid(goods.getGoods().getCategory3Id());//商品分类编号(3级)
-				
-				item.setCreateTime(new Date());//创建日期
-				
-				item.setUpdateTime(new Date());//修改日期
-				
-				//品牌名称
-				TbBrand brand = brandMapper.selectByPrimaryKey(goods.getGoods().getBrandId());
-				item.setBrand(brand.getName());
-				
-				//分类名称
-				TbItemCat itemCat = itemCatMapper.selectByPrimaryKey(goods.getGoods().getCategory3Id());
-				item.setCategory(itemCat.getName());
-				
-				//商家名称
-				TbSeller seller = sellerMapper.selectByPrimaryKey(goods.getGoods().getSellerId());
-				item.setSeller(seller.getNickName());
-				
-				//图片地址(取spu的第一个图片)
-				List<Map> imageList = JSON.parseArray(goods.getGoodsDesc().getItemImages(), Map.class);
-				if(imageList.size() > 0) {
-					item.setImage((String)imageList.get(0).get("url"));
-				}
+				setItemMethod(goods, item);
 				
 				itemMapper.insert(item);
-				
+			}
+		}
+		
+		private void setItemMethod(Goods goods, TbItem item) {//新增add方法的公共代码
+			
+			item.setGoodsId(goods.getGoods().getId());//商品SPU编号
+			item.setSellerId(goods.getGoods().getSellerId());//商家编号
+			item.setCategoryid(goods.getGoods().getCategory3Id());//商品分类编号(3级)
+			item.setCreateTime(new Date());//创建日期
+			item.setUpdateTime(new Date());//修改日期
+			
+			//品牌名称
+			TbBrand brand = brandMapper.selectByPrimaryKey(goods.getGoods().getBrandId());
+			item.setBrand(brand.getName());
+			
+			//分类名称
+			TbItemCat itemCat = itemCatMapper.selectByPrimaryKey(goods.getGoods().getCategory3Id());
+			item.setCategory(itemCat.getName());
+			
+			//商家名称
+			TbSeller seller = sellerMapper.selectByPrimaryKey(goods.getGoods().getSellerId());
+			item.setSeller(seller.getNickName());
+			
+			//图片地址(取spu的第一个图片)
+			List<Map> imageList = JSON.parseArray(goods.getGoodsDesc().getItemImages(), Map.class);
+			if(imageList.size() > 0) {
+				item.setImage((String)imageList.get(0).get("url"));
 			}
 		}
 	

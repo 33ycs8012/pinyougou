@@ -18,4 +18,8 @@
     <!-- 开启事务控制的注解支持 -->  
     <tx:annotation-driven transaction-manager="transactionManager"/>
    
+   	<beans xmlns:context="http://www.springframework.org/schema/context">
+   		<context:property-placeholder location="classpath:*.properties"   ignore-unresolvable="true"/>
+	</beans>
+
 </beans>
