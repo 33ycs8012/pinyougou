@@ -51,7 +51,9 @@ public class GoodsController {
 	@RequestMapping("/add")
 	public Result add(@RequestBody Goods goods){
 		//获取登录名
-		String sellerId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String sellerId = SecurityContextHolder.getContext()
+				.getAuthentication().getName();
+		
 		goods.getGoods().setSellerId(sellerId);//设置商家ID
 		try {
 			goodsService.add(goods);
@@ -68,7 +70,21 @@ public class GoodsController {
 	 * @return
 	 */
 	@RequestMapping("/update")
-	public Result update(@RequestBody TbGoods goods){
+	public Result update(@RequestBody Goods goods){
+		//校验是否是当前商家的id		
+		Goods goods2 = goodsService.findOne(goods.getGoods()
+				.getId());
+		
+		//获取当前登录的商家ID
+		String sellerId = SecurityContextHolder.getContext()
+				.getAuthentication().getName();
+		
+		//如果传递过来的商家ID并不是当前登录的用户的ID,则属于非法操作
+		if(!goods2.getGoods().getSellerId().equals(sellerId) ||  
+				!goods.getGoods().getSellerId().equals(sellerId)){
+			
+			return new Result(false, "操作非法");		
+		}		
 		try {
 			goodsService.update(goods);
 			return new Result(true, "修改成功");
@@ -112,10 +128,12 @@ public class GoodsController {
 	 * @return
 	 */
 	@RequestMapping("/search")
-	public PageResult search(@RequestBody TbGoods goods, int page, int rows  ){
+	public PageResult search(@RequestBody TbGoods goods, 
+			int page, int rows  ){
 		
 		//获取商家id
-		String sellerId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String sellerId = SecurityContextHolder.getContext()
+				.getAuthentication().getName();
 		
 		//添加查询条件
 		goods.setSellerId(sellerId);

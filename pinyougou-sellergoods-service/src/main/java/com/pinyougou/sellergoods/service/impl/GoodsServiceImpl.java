@@ -104,8 +104,18 @@ public class GoodsServiceImpl implements GoodsService {
 	 * 修改
 	 */
 	@Override
-	public void update(TbGoods goods){
-		goodsMapper.updateByPrimaryKey(goods);
+	public void update(Goods goods){
+		goods.getGoods().setAuditStatus("0");
+		goodsMapper.updateByPrimaryKey(goods.getGoods());
+		goodsDescMapper.updateByPrimaryKey(goods.getGoodsDesc());
+		
+		TbItemExample example = new TbItemExample();
+		com.pinyougou.pojo.TbItemExample.Criteria criteria = example.createCriteria();
+		criteria.andGoodsIdEqualTo(goods.getGoods().getId());
+		itemMapper.deleteByExample(example);
+		
+		saveItemList(goods);
+		
 	}	
 	
 	/**
@@ -200,6 +210,12 @@ public class GoodsServiceImpl implements GoodsService {
 			goods.getGoodsDesc().setGoodsId(goods.getGoods().getId());//设置ID
 			goodsDescMapper.insert(goods.getGoodsDesc());//插入商品扩展数据
 			
+			saveItemList(goods);
+			
+		}
+		
+		private void saveItemList(Goods goods) {
+			
 			if("1".equals(goods.getGoods().getIsEnableSpec())) {
 				for (TbItem item : goods.getItemList()) {
 					//标题title
@@ -222,16 +238,17 @@ public class GoodsServiceImpl implements GoodsService {
 				
 				item.setTitle(goods.getGoods().getGoodsName());
 				item.setPrice(goods.getGoods().getPrice());
-				item.setStatus("1");
-				item.setIsDefault("1");
-				item.setNum(99999);
-				item.setSpec("{}");
-				
+				item.setStatus(item_Status);
+				item.setIsDefault(item_IsDefault);
+				item.setNum(item_Num);
+				item.setSpec(item_Spec);
 				setItemMethod(goods, item);
 				
 				itemMapper.insert(item);
 			}
+			
 		}
+		
 		
 		private void setItemMethod(Goods goods, TbItem item) {//新增add方法的公共代码
 			
