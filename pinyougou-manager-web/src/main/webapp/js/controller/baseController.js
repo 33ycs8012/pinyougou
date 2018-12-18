@@ -34,7 +34,6 @@ app.controller('baseController' ,function($scope){
 		}
 	}
 	
-	//页面的品牌和规格是用的json格式的字符串存储在DB中的,所以我们需要这么一个转换的过程,好让数据以用户可识别的样式展现出来
 	$scope.jsonToString=function(jsonString,key){
 		
 		var json= JSON.parse(jsonString);

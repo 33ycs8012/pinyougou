@@ -1,5 +1,5 @@
  //控制层 
-app.controller('typeTemplateController' ,function($scope,$controller   ,typeTemplateService,brandService,specificationService){
+app.controller('typeTemplateController' ,function($scope,$controller   ,typeTemplateService,brandService,specificationService){	
 	
 	$controller('baseController',{$scope:$scope});//继承
 	
@@ -114,13 +114,4 @@ app.controller('typeTemplateController' ,function($scope,$controller   ,typeTemp
 		$scope.entity.customAttributeItems.splice( index,1);
 	}
 	
-	$scope.brandList={data:[]};
-	//品牌列表
-	$scope.findBrandList=function(){
-		brandService.selectOptionList().success(
-			function(response){
-				$scope.brandList={data:response};
-			}
-		)
-	}
 });	

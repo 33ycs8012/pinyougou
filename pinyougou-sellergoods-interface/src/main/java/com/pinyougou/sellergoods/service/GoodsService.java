@@ -59,12 +59,19 @@ public interface GoodsService {
 	 * @return
 	 */
 	public PageResult findPage(TbGoods goods, int pageNum,int pageSize);
-
+	
 	/**
-	 * 增加商品基本信息
+	 * 增加商品
 	 * @param goods
-	 * @return
 	 */
 	public void add(Goods goods);
+	
+	
+	/**
+	 * 批量修改状态
+	 * @param ids
+	 * @param status
+	 */
+	public void updateStatus(Long []ids,String status);
 	
 }

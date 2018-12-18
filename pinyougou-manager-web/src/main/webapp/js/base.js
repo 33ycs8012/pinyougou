@@ -1,2 +1,1 @@
-//定义模块
-var app = angular.module("pinyougou",[]);
+var app=angular.module('pinyougou',[]);

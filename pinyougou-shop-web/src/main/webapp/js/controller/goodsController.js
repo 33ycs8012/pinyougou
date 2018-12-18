@@ -58,9 +58,10 @@ app.controller('goodsController' ,function($scope,$controller,$location,goodsSer
 		serviceObject.success(
 			function(response){
 				if(response.success){
-					alert('保存成功');					
+					alert('保存成功');			
 					$scope.entity={};
 					editor.html("");
+					location.href="goods.html";//跳转到商品列表页
 				}else{
 					alert(response.message);
 				}
