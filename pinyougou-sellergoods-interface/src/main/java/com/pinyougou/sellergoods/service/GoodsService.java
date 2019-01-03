@@ -3,6 +3,7 @@ import java.util.List;
 
 import com.pinyougou.pojo.Goods;
 import com.pinyougou.pojo.TbGoods;
+import com.pinyougou.pojo.TbItem;
 import com.pinyougou.utils.PageResult;
 
 /**
@@ -73,5 +74,13 @@ public interface GoodsService {
 	 * @param status
 	 */
 	public void updateStatus(Long []ids,String status);
+	
+	/**
+	 * 根据商品ID和状态查询Item表信息  
+	 * @param goodsId
+	 * @param status
+	 * @return
+	 */
+	public List<TbItem> findItemListByGoodsIdandStatus(Long[] goodsIds, String status);
 	
 }

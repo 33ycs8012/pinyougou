@@ -3,8 +3,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.pinyougou.mapper.TbSpecificationOptionMapper;
@@ -88,7 +91,7 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
 	}
 	
 	
-		@Override
+	@Override
 	public PageResult findPage(TbTypeTemplate typeTemplate, int pageNum, int pageSize) {
 		PageHelper.startPage(pageNum, pageSize);
 		
@@ -110,33 +113,56 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
 			}
 	
 		}
-		
 		Page<TbTypeTemplate> page= (Page<TbTypeTemplate>)typeTemplateMapper.selectByExample(example);		
+		saveToRedis();//将数据存入到缓存中
 		return new PageResult(page.getTotal(), page.getResult());
 	}
 
-		@Override
-		public List<Map> findSpecList(Long id) {
+	@Override
+	public List<Map> findSpecList(Long id) {
+		
+		TbTypeTemplate typeTemplate = typeTemplateMapper.selectByPrimaryKey(id);
+		
+		List<Map> list = JSON.parseArray(typeTemplate.getSpecIds(),Map.class);
+		
+		for (Map map : list) {
 			
-			TbTypeTemplate typeTemplate = typeTemplateMapper.selectByPrimaryKey(id);
+			TbSpecificationOptionExample example = new TbSpecificationOptionExample();
+			com.pinyougou.pojo.TbSpecificationOptionExample.Criteria criteria = example.createCriteria();
+			criteria.andSpecIdEqualTo(new Long((Integer)map.get("id")));
 			
-			List<Map> list = JSON.parseArray(typeTemplate.getSpecIds(),Map.class);
+			List<TbSpecificationOption> options = specificationOptionMapper.selectByExample(example);
 			
-			for (Map map : list) {
-				
-				TbSpecificationOptionExample example = new TbSpecificationOptionExample();
-				com.pinyougou.pojo.TbSpecificationOptionExample.Criteria criteria = example.createCriteria();
-				criteria.andSpecIdEqualTo(new Long((Integer)map.get("id")));
-				
-				List<TbSpecificationOption> options = specificationOptionMapper.selectByExample(example);
-				
-				map.put("options", options);
-				
-				
-			}
+			map.put("options", options);
 			
-			return list;
+			
 		}
-
-
+		
+		return list;
+	}
+	
+	@Autowired
+	private RedisTemplate redisTemplate;
+	
+	/**
+	 * 将数据存入缓存
+	 */
+	private void saveToRedis() {
+		//获取模板数据
+		List<TbTypeTemplate> typeTemplateList = findAll();
+		//循环模版
+		for (TbTypeTemplate tbTypeTemplate : typeTemplateList) {
+			
+			//存储品牌列表
+			List<Map> brandList = JSON.parseArray(tbTypeTemplate.getBrandIds(), Map.class);
+			redisTemplate.boundHashOps("brandList").put(tbTypeTemplate.getId(), brandList);
+			
+			//存储规格列表
+			List<Map> specList = findSpecList(tbTypeTemplate.getId());//根据模版id查询规格列表
+			redisTemplate.boundHashOps("specList").put(tbTypeTemplate.getId(), specList);
+		}
+		
+	}
+	
+	
 }
