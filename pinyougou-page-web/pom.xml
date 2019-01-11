@@ -8,7 +8,7 @@
   <artifactId>pinyougou-page-web</artifactId>
   <packaging>war</packaging>
   
-	<build>  
+  <build>  
 	  <plugins>
 	      <plugin>
 				<groupId>org.apache.tomcat.maven</groupId>

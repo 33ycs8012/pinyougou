@@ -7,7 +7,7 @@
   </parent>
   <artifactId>pinyougou-sellergoods-interface</artifactId>
   
-  <dependencies>
+   <dependencies>
 		<dependency>
 			<groupId>com.pinyougou</groupId>
 			<artifactId>pinyougou-pojo</artifactId>
