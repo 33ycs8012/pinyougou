@@ -18,7 +18,7 @@ import com.pinyougou.utils.PageResult;
  * @author Administrator
  *
  */
-@Service
+@Service(timeout=10000)
 public class SellerServiceImpl implements SellerService {
 
 	@Autowired

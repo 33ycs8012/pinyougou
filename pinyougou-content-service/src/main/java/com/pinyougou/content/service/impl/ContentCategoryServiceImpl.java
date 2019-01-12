@@ -18,7 +18,7 @@ import com.pinyougou.content.service.ContentCategoryService;
  * @author Administrator
  *
  */
-@Service
+@Service(timeout=10000)
 public class ContentCategoryServiceImpl implements ContentCategoryService {
 
 	@Autowired

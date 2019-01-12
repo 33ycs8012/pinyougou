@@ -19,7 +19,7 @@ import com.pinyougou.content.service.ContentService;
  * @author Administrator
  *
  */
-@Service
+@Service(timeout=10000)
 public class ContentServiceImpl implements ContentService {
 
 	@Autowired

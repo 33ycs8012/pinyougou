@@ -29,7 +29,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.pinyougou.pojo.TbItem;
 import com.pinyougou.search.service.ItemSearchService;
 
-@Service(timeout = 3000)
+@Service(timeout=10000)
 public class ItemSearchServiceImpl implements ItemSearchService {
 
 	

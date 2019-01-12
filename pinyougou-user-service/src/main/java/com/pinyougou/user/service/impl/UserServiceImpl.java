@@ -29,7 +29,7 @@ import com.pinyougou.pojo.TbUserExample.Criteria;
 import com.pinyougou.user.service.UserService;
 import com.pinyougou.utils.PageResult;
 
-@Service
+@Service(timeout=10000)
 public class UserServiceImpl implements UserService {
 	@Autowired
 	private TbUserMapper userMapper;

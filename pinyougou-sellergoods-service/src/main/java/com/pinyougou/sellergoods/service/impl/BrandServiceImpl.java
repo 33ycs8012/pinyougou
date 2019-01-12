@@ -17,7 +17,7 @@ import com.pinyougou.pojo.TbBrandExample.Criteria;
 import com.pinyougou.sellergoods.service.BrandServiceI;
 import com.pinyougou.utils.PageResult;
 
-@Service
+@Service(timeout=10000)
 public class BrandServiceImpl implements BrandServiceI{
 	
 	@Autowired

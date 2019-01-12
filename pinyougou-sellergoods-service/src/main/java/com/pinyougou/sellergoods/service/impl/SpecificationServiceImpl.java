@@ -23,7 +23,7 @@ import com.pinyougou.utils.PageResult;
  * @author Administrator
  *
  */
-@Service
+@Service(timeout=10000)
 public class SpecificationServiceImpl implements SpecificationService {
 
 	@Autowired

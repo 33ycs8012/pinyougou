@@ -37,7 +37,7 @@ import com.pinyougou.utils.PageResult;
  * @author Administrator
  *
  */
-@Service
+@Service(timeout=10000)
 @Transactional
 public class GoodsServiceImpl implements GoodsService {
 
